@@ -1,5 +1,5 @@
 import React, { useState, Fragment } from 'react';
-import { API_URL, API_KEY, IMAGE_BASE_URL, BACKDROP_SIZE, POSTER_SIZE } from '../config';
+import { SEARCH_BASE_URL, POPULAR_BASE_URL, IMAGE_BASE_URL, BACKDROP_SIZE, POSTER_SIZE } from '../config';
 
 import Grid from './elements/Grid';
 import HeroImage from './elements/HeroImage';
@@ -13,23 +13,46 @@ import { useHomeFetch } from './hooks/useHomeFetch';
 import NoImage from './images/no_image.jpg';
 
 const Home = () => {
-	const [{ state, loading, error }, fetchMovies] = useHomeFetch();
+	const [
+		{
+			state: { movies, heroImage, currentPage, totalPage },
+			loading,
+			error,
+		},
+		fetchMovies,
+	] = useHomeFetch();
 	const [searchTerm, setSearchTerm] = useState('');
-	console.log(state);
+	console.log(movies);
+
+	const searchMovies = (search) => {
+		const endpoint = search ? SEARCH_BASE_URL + search : POPULAR_BASE_URL;
+		setSearchTerm(search);
+		fetchMovies(endpoint);
+	};
+
+	const loadMoreMovies = () => {
+		const searchEndpoint = `${SEARCH_BASE_URL}${searchTerm}&page=${currentPage + 1}`;
+		const popularEndpoint = `${POPULAR_BASE_URL}&page=${currentPage + 1}`;
+
+		const endpoint = searchTerm ? searchEndpoint : popularEndpoint;
+		fetchMovies(endpoint);
+	};
 
 	if (error) return <div>Something went wrong...</div>;
-	if (!state.movies[0]) return <Spinner />;
+	if (!movies[0]) return <Spinner />;
 
 	return (
 		<Fragment>
-			<HeroImage
-				image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${state.heroImage.backdrop_path}`}
-				title={state.heroImage.original_title}
-				text={state.heroImage.overview}
-			/>
-			<SearchBar />
+			{!searchTerm && (
+				<HeroImage
+					image={`${IMAGE_BASE_URL}${BACKDROP_SIZE}${heroImage.backdrop_path}`}
+					title={heroImage.original_title}
+					text={heroImage.overview}
+				/>
+			)}
+			<SearchBar callback={searchMovies} />
 			<Grid header={searchTerm ? 'Search Results' : 'Popular Movies'}>
-				{state.movies.map((movie) => (
+				{movies.map((movie) => (
 					<MovieThumb
 						key={movie.id}
 						clickable
@@ -39,7 +62,7 @@ const Home = () => {
 				))}
 			</Grid>
 			{loading && <Spinner />}
-			<LoadMoreBtn />
+			{currentPage < totalPage && !loading && <LoadMoreBtn text="Load More" callback={loadMoreMovies} />}
 		</Fragment>
 	);
 };
