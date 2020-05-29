@@ -1,4 +1,5 @@
 import React, { useState, useRef } from 'react';
+import PropTypes from 'prop-types';
 import FontAwesome from 'react-fontawesome';
 
 import { StyledSearchBar, StyledSearchBarContent } from '../styles/StyledSearchBar';
@@ -25,6 +26,10 @@ const SearchBar = ({ callback }) => {
 			</StyledSearchBarContent>
 		</StyledSearchBar>
 	);
+};
+
+SearchBar.propTypes = {
+	movie: PropTypes.func,
 };
 
 export default SearchBar;
